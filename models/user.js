@@ -8,15 +8,20 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true, minLength: 8 },
     isVerified: { type: Boolean, required: true, default: false },
-    passowrdResetOtp: { type: String, },
-    passworOtpExpires: { type: Date, },
+    passwordResetOtp: { type: String, },
+    passwordOtpExpires: { type: Date, },
     otp: { type: String, },
     otpExpires: { type: Date, },
+    googleId: { type: String },
+    googleToken: { type: String },
+    facebookId: { type: String },
+    facebookToken: { type: String },
+    linkedinId: { type: String },
+    linkedinToken: { type: String },
 });
 
 userSchema.plugin(passportLocalMongoose)
 const User = mongoose.model('User', userSchema);
-//passport.use(User.createStrategry())
 passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())
 

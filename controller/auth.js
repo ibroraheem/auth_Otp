@@ -6,6 +6,9 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+const LinkedInStrategy = require('passport-linkedin-oauth2').Strategy;
 
 passport.use('signup', new LocalStrategy({
     usernameField: 'email',
@@ -96,6 +99,87 @@ const sendOtpVerificationEmail = async ({ _id, email }, res) => {
     }
 };
 
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "/auth/google/callback"
+},
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            let user = await User.findOne({ email: profile.emails[0].value });
+
+            if (!user) {
+                user = new User({
+                    googleId: profile.id,
+                    googleToken: accessToken,
+                    username: profile.displayName,
+                    email: profile.emails[0].value,
+                    isVerified: true
+                });
+                await user.save();
+            }
+
+            done(null, user);
+        } catch (error) {
+            done(error);
+        }
+    }
+));
+
+passport.use(new FacebookStrategy({
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackURL: "/auth/facebook/callback"
+},
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            let user = await User.findOne({ email: profile.emails[0].value });
+
+            if (!user) {
+                user = new User({
+                    facebookId: profile.id,
+                    facebookToken: accessToken,
+                    username: profile.displayName,
+                    email: profile.emails[0].value,
+                    isVerified: true
+                });
+                await user.save();
+            }
+
+            done(null, user);
+        } catch (error) {
+            done(error);
+        }
+    }
+));
+
+passport.use(new LinkedInStrategy({
+    clientID: process.env.LINKEDIN_CLIENT_ID,
+    clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+    callbackURL: "/auth/linkedin/callback",
+    scope: ['r_emailaddress', 'r_liteprofile'],
+},
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            let user = await User.findOne({ email: profile.emails[0].value });
+
+            if (!user) {
+                user = new User({
+                    linkedinId: profile.id,
+                    linkedinToken: accessToken,
+                    username: profile.displayName,
+                    email: profile.emails[0].value,
+                    isVerified: true
+                });
+                await user.save();
+            }
+
+            done(null, user);
+        } catch (error) {
+            done(error);
+        }
+    }
+));
 
 const verifyOtp = async (req, res) => {
     try {
